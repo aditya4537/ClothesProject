@@ -11,6 +11,7 @@
 			href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css"
 			integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+		<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
 		<style>
 			@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;700;900&display=swap');
 
@@ -26,8 +27,7 @@
 			html,
 			body {
 				height: 100%;
-				color: white;
-				background-color: #152733;
+				color: black;
 
 			}
 
@@ -56,7 +56,7 @@
 			}
 
 			.form-content .form-items {
-				border: 3px solid #fff;
+				border: 3px solid black;
 				padding: 40px;
 				display: inline-block;
 				width: 100%;
@@ -70,7 +70,7 @@
 			}
 
 			.form-content h3 {
-				color: #fff;
+				color: black;
 				text-align: left;
 				font-size: 28px;
 				font-weight: 600;
@@ -82,7 +82,7 @@
 			}
 
 			.form-content p {
-				color: #fff;
+				color: black;
 				text-align: left;
 				font-size: 17px;
 				font-weight: 300;
@@ -93,7 +93,7 @@
 			.form-content label,
 			.was-validated .form-check-input:invalid~.form-check-label,
 			.was-validated .form-check-input:valid~.form-check-label {
-				color: #fff;
+				color: black;
 			}
 
 			.form-content input[type=text],
@@ -106,7 +106,7 @@
 				border: 0;
 				outline: 0;
 				border-radius: 6px;
-				background-color: #fff;
+				background-color: white;
 				font-size: 15px;
 				font-weight: 300;
 				color: #8D8D8D;
@@ -202,7 +202,8 @@
 								aria-disabled="true">Disabled</a></li>
 					</ul>
 					<form class="form-inline my-2 my-lg-0">
-						<input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
+						<input id="search" class="form-control mr-sm-2" type="search" placeholder="Search"
+							aria-label="Search">
 						<button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
 					</form>
 				</div>
@@ -215,7 +216,10 @@
 				<h1 class="">Clothes details</h1>
 				<button id="previous">Previous</button>
 				<button id="next">Next</button>
-				<table class="table" style="color:white;">
+				<button id="pdf" name="export">Export pdf</button>
+				<button id="xls" name="export">Export excel</button>
+
+				<table class="table">
 					<thead>
 						<tr>
 							<th scope="col">Id</th>
@@ -233,14 +237,13 @@
 				</table>
 			</div>
 
-			<button id="get_clothes">Get Clothes</button>
-
 			<div class="form-body" id="form">
 				<div class="row">
 					<div class="form-holder">
 						<div class="form-content">
 							<div class="form-items">
-								<h3>Add Cloth</h3>
+								<h3 id="add_show">Add Cloth</h3>
+								<h3 id="update_show">Update Cloth</h3>
 								<p>Fill in the data below.</p>
 								<form class="requires-validation" novalidate>
 
@@ -259,10 +262,10 @@
 
 									<div class="col-md-12">
 										<select class="form-select mt-3" name="size" id="size" required>
-											<option selected disabled value="">Size</option>
-											<option value="s">Small</option>
-											<option value="m">Medium</option>
-											<option value="l">Large</option>
+											<option value="">Size</option>
+											<option id="small" value="s">Small</option>
+											<option id="medium" value="m">Medium</option>
+											<option id="large" value="l">Large</option>
 										</select>
 										<div class="valid-feedback">You selected a position!</div>
 										<div class="invalid-feedback">Please select a position!</div>
@@ -296,6 +299,7 @@
 
 									<div class="form-button mt-3">
 										<button id="submit" type="submit" class="btn btn-primary">Submit</button>
+										<button id="update" type="submit" class="btn btn-primary">Update</button>
 									</div>
 								</form>
 							</div>
@@ -316,14 +320,59 @@
 			$(document).ready(function () {
 				$('#form').hide();
 				$('#add').click(function () {
-					$('#home_content').hide();
-					$('#form').show();
+					$('#home_content').hide('slow');
+					$('#form').show('slow');
+					$('#add_show').show();
+					$('#update_show').hide();
+					$('#update').hide();
 				})
 				$('#home').click(function () {
-					$('#form').hide();
-					$('#home_content').show();
+					$('#form').hide('slow');
+					$('#home_content').show('slow');
 				})
 
+				// export data as pdf or excel
+				$('button[name="export"]').click(function () {
+					var format = $(this).attr("id");
+					var uri = "/report/" + format;
+
+					// $.get({
+					// 	url: uri,
+					// 	success: function (data) {
+					// 		swal("Exported Successfully!", "File saved at Path: " + data, "success");
+					// 		window.open(data, "_blank");
+
+					// 		getAllData(0, 10);
+					// 	},
+					// 	error: function () {
+					// 		swal("Sorry!", "Some error has occurred", "error");
+					// 	}
+
+					// })
+
+					$.ajax({
+						url: uri,
+						method: 'GET',
+						xhrFields: {
+							responseType: 'blob'
+						},
+						success: function (data) {
+							var a = document.createElement('a');
+							var url = window.URL.createObjectURL(data);
+							a.href = url;
+							a.download = 'clothes.' + format; // You can set the filename here
+							document.body.append(a);
+							a.click();
+							a.remove();
+							window.URL.revokeObjectURL(url);
+							swal("Exported Successfully!", "File saved successfully", "success");
+							getAllData(0, 10);
+						},
+						error: function () {
+							swal("Sorry!", "Some error has occurred", "error");
+						}
+					});
+				})
 
 				// var elementIds = new Set();
 				// $('#get_clothes').click(function () {
@@ -345,28 +394,12 @@
 				// 	})
 				// })
 
+
+
 				var offset = 0;
 				var pageSize = 10;
-				$.get("/get/" + offset + '/' + pageSize, function (data, status) {
-					console.log("Request successful.", status);
+				getAllData(offset, pageSize);
 
-					var realData = data.response.content;
-
-					if (realData.length > 0) {
-						$('table tbody').empty();
-
-						for (const element of realData) {
-							var tbody = $('table tbody');
-							var rowData = $('<tr><td>' + element.clothId + '</td><td>' + element.clothName + '</td><td>' + element.clothSize + '</td><td>' + element.color + '</td><td>' + element.category + '</td><td>' + element.price + '</td><td><a>Edit</a><a href="/delete/'+ element.clothId + '">Delete</a></td></tr>');
-							tbody.append(rowData);
-						}
-
-						console.log("Data fetched successfully.");
-					} else {
-						alert("No more records available.");
-					}
-
-				});
 
 				$('#next').click(function () {
 					offset += 1;
@@ -377,18 +410,11 @@
 
 						if (realData.length > 0) {
 							$('table tbody').empty();
-
-
-							for (const element of realData) {
-								var tbody = $('table tbody');
-								var rowData = $('<tr><td>' + element.clothId + '</td><td>' + element.clothName + '</td><td>' + element.clothSize + '</td><td>' + element.color + '</td><td>' + element.category + '</td><td>' + element.price + '</td><td><a>Edit</a><a href="/delete/'+ element.clothId + '">Delete</a></td></tr>');
-								tbody.append(rowData);
-							}
-
+							addRows(realData);
 							console.log("Data fetched successfully.");
 						} else {
 							offset -= 1;
-							alert("No more records available.");
+							swal("Ohh! Sorry", "There is no next page", "error");
 						}
 
 					});
@@ -403,27 +429,20 @@
 
 							console.log("Request successful.", status);
 							var realData = data.response.content;
-
 							$('table tbody').empty();
-
-							for (const element of realData) {
-								var tbody = $('table tbody');
-								var rowData = $('<tr><td>' + element.clothId + '</td><td>' + element.clothName + '</td><td>' + element.clothSize + '</td><td>' + element.color + '</td><td>' + element.category + '</td><td>' + element.price + '</td><td><a>Edit</a>|<a href="/delete/'+ element.clothId + '">Delete</a></td></tr>');
-								tbody.append(rowData);
-							}
-
+							addRows(realData);
 							console.log("Data fetched successfully.");
 						});
 					} else {
 						offset += 1;
-						alert("No more records available.");
+						swal("Ohh! Sorry", "This is the first page!", "error");
 					}
 				});
 
 
 				$('#name_field').click(function () {
 					console.log(offset, pageSize)
-					$.get("/get/"+ offset + "/" + pageSize + "/clothName", function (data, status) {
+					$.get("/get/" + offset + "/" + pageSize + "/clothName", function (data, status) {
 						console.log("Request successful.", status)
 						$("table tbody").empty();
 						for (const element of data.response.content) {
@@ -437,6 +456,7 @@
 
 				$('#submit').click(function () {
 					event.preventDefault();
+
 					var name = $("#name").val();
 					var ccategory = $("#category").val();
 					var size = $("#size").val();
@@ -457,7 +477,7 @@
 						data: JSON.stringify(postData),
 						success: function (response) {
 							console.log("Added successfully!", response)
-							alert("Added successfully!", response)
+							swal("Data added successfully!", response, "success");
 							var name = $("#name").val('');
 							var ccategory = $("#category").val('');
 							var size = $("#size").val('');
@@ -466,6 +486,7 @@
 						},
 						error: function (error) {
 							console.log("Error: ", error)
+							swal("Ohh! Sorry", error, "error");
 						}
 					})
 					/* 
@@ -481,14 +502,149 @@
 				});
 
 			});
+
+			$("#search").keyup(function () {
+				if ($(this).val() != '') {
+					console.log($(this).val());
+					$.get({
+						url: "/search?sq=" + $(this).val(),
+						success: function (data) {
+							$('table tbody').empty();
+							addRows(data);
+							console.log("Fetched the results.");
+						},
+						error: function (error) {
+							console.log("Some error occurred!", error);
+						}
+					})
+				} else {
+					getAllData(0, 10);
+				}
+			})
+
+			function addRows(realData) {
+				for (const element of realData) {
+					var tbody = $('table tbody');
+					var rowData = $('<tr><td>'
+						+ element.clothId
+						+ '</td><td>'
+						+ element.clothName
+						+ '</td><td>'
+						+ element.clothSize
+						+ '</td><td>'
+						+ element.color
+						+ '</td><td>'
+						+ element.category
+						+ '</td><td>'
+						+ element.price
+						+ '</td><td><button onclick="updateCloth('
+						+ element.clothId
+						+ ',\''
+						+ element.clothName
+						+ '\',\''
+						+ element.clothSize
+						+ '\',\''
+						+ element.color
+						+ '\',\''
+						+ element.category
+						+ '\','
+						+ element.price
+						+ ')">Edit</button> | <button onclick="deleteCloth('
+						+ element.clothId
+						+ ')">Delete</button></td></tr>'
+					);
+					tbody.append(rowData);
+				}
+			}
+
+			function getAllData(offset, pageSize) {
+				$('#form').hide();
+				$('#home_content').show();
+				$.get("/get/" + offset + '/' + pageSize, function (data, status) {
+					console.log("Request successful.", status);
+
+					var realData = data.response.content;
+
+					if (realData.length > 0) {
+						$('table tbody').empty();
+						addRows(realData);
+						console.log("Data fetched successfully.");
+					} else {
+						alert("No more records available.");
+					}
+
+				});
+			}
+
+			var currentClothId = null;
+
+			$('#update').click(function () {
+				event.preventDefault();
+				var name = $("#name").val();
+				var ccategory = $("#category").val();
+				var size = $("#size").val();
+				var cprice = $("#price").val();
+				var ccolor = $('input[name="color"]:checked').val();
+
+				var postData = {
+					clothId: currentClothId,
+					clothName: name,
+					clothSize: size,
+					color: ccolor,
+					category: ccategory,
+					price: cprice
+				}
+
+				$.post({
+					url: "/add",
+					contentType: 'application/json',
+					data: JSON.stringify(postData),
+					success: function (response) {
+						swal("Updated successfully!", response, "success");
+						getAllData(0, 10);
+					},
+					error: function (error) {
+						console.log("Error: ", error)
+					}
+				})
+			})
+
+			function updateCloth(id, name, size, color, category, price) {
+				console.log(id, name, size, color, category, price);
+				$('#home_content').hide();
+				$('#form').show(function () {
+					$('#add_show').hide();
+					$('#update_show').show();
+					$("#submit").hide();
+					$("#update").show();
+
+					$("#name").val(name);
+					$("#size").val(size).prop("selected", true);
+					$("#" + color).prop("checked", true);
+					$("#category").val(category);
+					$("#price").val(price);
+
+					currentClothId = id;
+				});
+			}
+
+
+			function deleteCloth(id) {
+				console.log("Id from function", id)
+				$.ajax({
+					type: "DELETE",
+					url: "/delete/" + id,
+					contentType: 'application/json',
+					success: function (data, status) {
+						alert("Deleted successfully!");
+						console.log(data.message);
+						getAllData(0, 10);
+					}
+				});
+
+			}
 		</script>
 
-
-		<!-- <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"></script>
-	<script
-		src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
-	<script
-		src="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/js/bootstrap.min.js"></script> -->
 	</body>
 
 	</html>
